@@ -24,6 +24,8 @@ const EmployeeDashboard = () => {
   const [passwordChangeError, setPasswordChangeError] = useState('');
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
 
+  const [status, setStatus] = useState(''); // To keep track of the selected status
+
   useEffect(() => {
     const token = sessionStorage.getItem("Authorization");
     if (!token) {
@@ -74,16 +76,15 @@ const EmployeeDashboard = () => {
       if (response.ok) {
         setPasswordChangeSuccess('Password changed successfully!');
         handleCloseChangePasswordModal();
-        // Clear the input fields after successful change
         setOldPassword('');
         setNewPassword('');
         setConfirmNewPassword('');
       } else {
-        const errorData = await response.json(); // Parse the JSON error response
+        const errorData = await response.json();
         if (errorData.old_password) {
-          setPasswordChangeError(errorData.old_password[0]); // Set specific old password error
+          setPasswordChangeError(errorData.old_password[0]);
         } else if (errorData.new_password) {
-          setPasswordChangeError(errorData.new_password[0]); // Set specific new password error
+          setPasswordChangeError(errorData.new_password[0]);
         } else {
           setPasswordChangeError('Failed to change password. Please try again.');
         }
@@ -93,10 +94,10 @@ const EmployeeDashboard = () => {
     }
   };
 
-
   const handleChatClick = (ticket) => {
     setSelectedTicket(ticket);
     setIsTicketDetailsModalOpen(true);
+    setStatus(ticket.status); // Set the current status of the ticket in state
   };
 
   const handleCloseTicketDetailsModal = () => {
@@ -145,6 +146,52 @@ const EmployeeDashboard = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');
+    }
+  };
+
+  // Handle select change for status update
+  const handleChange = (event) => {
+    const selectedStatus = event.target.value;
+    setStatus(selectedStatus);
+
+    // Make an API call with the selected status
+    if (selectedTicket) {
+      fetchStatus(selectedStatus, selectedTicket.id);
+    }
+  };
+
+  // Fetch API call when status is selected
+  const fetchStatus = async (status, id) => {
+    const token = sessionStorage.getItem("Authorization");
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/tickets/update-status/${id}/`, {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({ status }), 
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      const data = await response.json();
+      console.log('Status updated:', data);
+
+      // Update the selected ticket's status in the state
+      const updatedTicket = { ...selectedTicket, status };
+      setSelectedTicket(updatedTicket);
+
+      // Update the tickets list
+      const updatedTickets = tickets.map(ticket =>
+        ticket.id === selectedTicket.id ? updatedTicket : ticket
+      );
+      setTickets(updatedTickets);
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 
@@ -226,6 +273,14 @@ const EmployeeDashboard = () => {
                 </p>
                 <p>
                   <strong>Status:</strong> {selectedTicket.status}
+                </p>
+                <p>
+                  <label htmlFor="status-select">Select Status:</label>
+                  <select id="status-select" value={status} onChange={handleChange}>
+                    <option value="">--Choose Status--</option>
+                    <option value="open">Open</option>
+                    <option value="closed">Closed</option>
+                  </select>
                 </p>
               </Col>
 
