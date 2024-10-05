@@ -195,6 +195,21 @@ const EmployeeDashboard = () => {
     }
   };
 
+
+  const [statusFilter, setStatusFilter] =  useState(null);
+    // Handler for status filter change
+    const handleStatusFilterChange = (e) => {
+      setStatusFilter(e.target.value);
+    };
+  
+    // Filter tickets by status
+    const filteredTickets = (tickets) => {
+      if (!statusFilter) return tickets; // If no filter is selected, return all tickets
+      return tickets.filter(ticket => ticket.status.toLowerCase() === statusFilter.toLowerCase());
+    };
+
+
+
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -223,6 +238,16 @@ const EmployeeDashboard = () => {
         {tickets.length === 0 ? (
           <Alert variant="danger" className='m-5 text-center'>No tickets assigned to you.</Alert>
         ) : (
+          <>
+                  <div className="filter-section">
+        <label htmlFor="statusFilter" className="mr-2">Filter by Status: </label>
+        <select id="statusFilter" value={statusFilter} onChange={handleStatusFilterChange} className="form-control w-25 d-inline-block">
+          <option value="">All</option>
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+
           <Table responsive="md" striped bordered hover className="employee-table">
             <thead>
               <tr>
@@ -235,7 +260,7 @@ const EmployeeDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {tickets.map((ticket, idx) => (
+              {filteredTickets(tickets).map((ticket, idx) => (
                 <tr key={idx}>
                   <td>{ticket.id}</td>
                   <td>{ticket.subject}</td>
@@ -251,6 +276,7 @@ const EmployeeDashboard = () => {
               ))}
             </tbody>
           </Table>
+          </>
         )}
       </Container>
 

@@ -90,8 +90,20 @@ const CustomerDashboard = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');
-    }
+    } 
   };
+
+    const [statusFilter, setStatusFilter] =  useState(null);
+    // Handler for status filter change
+    const handleStatusFilterChange = (e) => {
+      setStatusFilter(e.target.value);
+    };
+  
+    // Filter tickets by status
+    const filteredTickets = (tickets) => {
+      if (!statusFilter) return tickets; // If no filter is selected, return all tickets
+      return tickets.filter(ticket => ticket.status.toLowerCase() === statusFilter.toLowerCase());
+    };
 
 
   return (
@@ -120,7 +132,18 @@ const CustomerDashboard = () => {
       {tickets.length === 0 ? (
         <Alert variant="danger" className='m-5 text-center'>You haven't raised a ticket yet!</Alert>
       ) : (
+        <>
+        
+
         <div className="container customer-list-container">
+        <div className="filter-section">
+        <label htmlFor="statusFilter" className="mr-2">Filter by Status: </label>
+        <select id="statusFilter" value={statusFilter} onChange={handleStatusFilterChange} className="form-control w-25 d-inline-block">
+          <option value="">All</option>
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
           <Table responsive striped bordered hover className="mt-3 customer-table">
             <thead>
               <tr>
@@ -132,7 +155,7 @@ const CustomerDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {tickets.map((ticket, index) => (
+              {filteredTickets(tickets).map((ticket, index) => (
                 <React.Fragment key={index}>
                   <tr>
                     <td>{ticket.id}</td>
@@ -150,6 +173,7 @@ const CustomerDashboard = () => {
             </tbody>
           </Table>
         </div>
+        </>
       )}
 
       {isCreateTicketModalOpen && <CreateTicketModal closeModal={handleCloseModals} />}

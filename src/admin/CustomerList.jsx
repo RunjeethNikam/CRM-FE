@@ -7,6 +7,8 @@ const CustomerList = ({ customers }) => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isChatModalOpen, setChatModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState(''); // State for status filter
+
   const customersPerPage = 4; // Number of customers to show per page
 
   // Pagination for customers
@@ -37,9 +39,30 @@ const CustomerList = ({ customers }) => {
     return new Date(date).toLocaleDateString();
   };
 
+  // Handler for status filter change
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  // Filter tickets by status
+  const filteredTickets = (tickets) => {
+    if (!statusFilter) return tickets; // If no filter is selected, return all tickets
+    return tickets.filter(ticket => ticket.status.toLowerCase() === statusFilter.toLowerCase());
+  };
+
   return (
     <div className="container customer-list-container">
       <h1 className="text-center">Customer Details</h1>
+
+      {/* Dropdown to filter tickets by status */}
+      <div className="filter-section">
+        <label htmlFor="statusFilter" className="mr-2">Filter by Status: </label>
+        <select id="statusFilter" value={statusFilter} onChange={handleStatusFilterChange} className="form-control w-25 d-inline-block">
+          <option value="">All</option>
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
 
       <Table responsive striped bordered hover className="mt-3 customer-table">
         <thead>
@@ -67,7 +90,7 @@ const CustomerList = ({ customers }) => {
                 <td colSpan="4">
                   <Collapse in={expandedCustomer === customer}>
                     <div className="tickets-list">
-                      {customer.created_tickets.length > 0 ? (
+                      {filteredTickets(customer.created_tickets).length > 0 ? (
                         <Table striped bordered hover className="mt-3">
                           <thead>
                             <tr>
@@ -80,7 +103,7 @@ const CustomerList = ({ customers }) => {
                             </tr>
                           </thead>
                           <tbody>
-                            {customer.created_tickets.map((ticket, idx) => (
+                            {filteredTickets(customer.created_tickets).map((ticket, idx) => (
                               <tr key={idx}>
                                 <td>{ticket.id}</td>
                                 <td>{ticket.subject}</td>
@@ -98,7 +121,7 @@ const CustomerList = ({ customers }) => {
                         </Table>
                       ) : (
                         <Alert variant="danger" className="mt-3 text-center">
-                          No Data
+                          No Tickets Available
                         </Alert>
                       )}
                     </div>
@@ -159,7 +182,6 @@ const CustomerList = ({ customers }) => {
                       <div>No messages available.</div>
                     )}
                   </div>
-
                 </div>
               </Col>
             </Row>
@@ -171,10 +193,9 @@ const CustomerList = ({ customers }) => {
           </Modal.Footer>
         </Modal>
       )}
-
-
     </div>
   );
 };
+
 
 export default CustomerList;
